@@ -9,16 +9,15 @@ class handler(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length)
         data = json.loads(post_data)
         
-        # API Key HuggingFace (Simpan di Environment Variables Vercel)
         HF_TOKEN = os.environ.get("HF_TOKEN")
-        
-        # Contoh menggunakan model Llama-3 atau model lain di HuggingFace
-        model_url = "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct"
+        # Logic Switch Model
+        model_name = data.get("model", "ultra")
+        url = "https://api-inference.huggingface.co/models/microsoft/Phi-3-mini-4k-instruct" if model_name == "flash" else "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct"
         
         response = requests.post(
-            model_url,
+            url,
             json={"inputs": data['prompt']},
-            headers={"Authorization": f"Bearer {HF_TOKEN}"}
+            headers={"Authorization": f"Bearer {HF_TOKEN}", "Content-Type": "application/json"}
         )
         
         self.send_response(200)
