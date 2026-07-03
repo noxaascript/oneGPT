@@ -9,13 +9,16 @@ class handler(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length)
         data = json.loads(post_data)
         
-        # API Key tersimpan di Environment Variables Vercel
-        API_KEY = os.environ.get("DEEPSEEK_KEY")
+        # API Key HuggingFace (Simpan di Environment Variables Vercel)
+        HF_TOKEN = os.environ.get("HF_TOKEN")
+        
+        # Contoh menggunakan model Llama-3 atau model lain di HuggingFace
+        model_url = "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct"
         
         response = requests.post(
-            "https://api.deepseek.com/chat/completions",
-            json=data,
-            headers={"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
+            model_url,
+            json={"inputs": data['prompt']},
+            headers={"Authorization": f"Bearer {HF_TOKEN}"}
         )
         
         self.send_response(200)
@@ -23,4 +26,4 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         self.wfile.write(response.content)
-      
+        
