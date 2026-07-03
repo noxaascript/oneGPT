@@ -6,31 +6,32 @@ import os
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
+            # 1. Ambil data dari request
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length)
             data = json.loads(post_data)
             
-            HF_TOKEN = os.environ.get("HF_TOKEN")
-            if not HF_TOKEN:
-                raise Exception("HF_TOKEN belum di-set di Vercel!")
-                
-            model_name = data.get("model", "ultra")
-            url = "https://api-inference.huggingface.co/models/microsoft/Phi-3-mini-4k-instruct" if model_name == "flash" else "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct"
+            # 2. Ambil token dari environment
+            token = os.environ.get("HF_TOKEN")
             
-            response = requests.post(
-                url,
-                json={"inputs": data.get('prompt', '')},
-                headers={"Authorization": f"Bearer {HF_TOKEN}", "Content-Type": "application/json"}
-            )
+            # 3. Request ke AI
+            # Kita gunakan model yang ringan & stabil
+            url = "https://api-inference.huggingface.co/models/google/gemma-2-2b-it"
+            headers = {"Authorization": f"Bearer {token}"}
+            payload = {"inputs": data.get("prompt", "Halo")}
             
+            response = requests.post(url, headers=headers, json=payload)
+            
+            # 4. Kirim balik ke Roblox
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(response.content)
+            
         except Exception as e:
+            # Jika error, kirim pesan error ke Roblox agar kita tahu masalahnya
             self.send_response(500)
-            self.send_header('Content-type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps({"error": str(e)}).encode())
+            self.wfile.write(str(e).encode())
             
